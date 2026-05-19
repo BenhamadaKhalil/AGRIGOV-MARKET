@@ -17,8 +17,8 @@ load_dotenv()
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("SECRET_KEY")
-DEBUG = True
-ALLOWED_HOSTS = ['*', '192.168.1.22', 'localhost', '127.0.0.1']
+DEBUG = os.getenv("DEBUG", "False") == "True"
+ALLOWED_HOSTS = ['*', '192.168.1.22', 'localhost', '127.0.0.1' , "https://agrigov-market-xaxy.onrender.com"]
 
 
 # Application definition
@@ -92,6 +92,7 @@ ROOT_URLCONF = 'Agrigov.urls'
 AUTH_USER_MODEL = "users.User"
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "https://agrigov-market.vercel.app"
 ]
 
 TEMPLATES = [
@@ -127,7 +128,6 @@ DATABASES = {
         },
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
