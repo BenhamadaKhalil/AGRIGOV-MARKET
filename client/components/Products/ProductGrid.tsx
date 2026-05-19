@@ -13,7 +13,6 @@ interface Props {
   onClearFilter: (key: keyof FilterState) => void;
 }
 
-/** Skeleton card shown while loading */
 function SkeletonCard() {
   return (
     <div className="bg-white rounded-xl border border-neutral-100 overflow-hidden animate-pulse">
@@ -32,24 +31,17 @@ function SkeletonCard() {
   );
 }
 
-/** Active filter pills shown above the grid */
-function ActivePills({
-  filters,
-  onClearFilter,
-}: {
-  filters: FilterState;
-  onClearFilter: (key: keyof FilterState) => void;
-}) {
+function ActivePills({ filters, onClearFilter }: { filters: FilterState; onClearFilter: (key: keyof FilterState) => void }) {
   const pills: { key: keyof FilterState; label: string }[] = [];
 
   if (filters.category) {
     const cat = CATEGORY_OPTIONS.find((c) => c.slug === filters.category);
     pills.push({ key: "category", label: cat?.label ?? filters.category });
   }
-  if (filters.season)     pills.push({ key: "season",     label: SEASON_LABELS[filters.season as keyof typeof SEASON_LABELS] });
-  if (filters.min_price)  pills.push({ key: "min_price",  label: `Min ${filters.min_price} DZD` });
-  if (filters.max_price)  pills.push({ key: "max_price",  label: `Max ${filters.max_price} DZD` });
-  if (filters.in_stock)   pills.push({ key: "in_stock",   label: "In Stock" });
+  if (filters.season) pills.push({ key: "season", label: SEASON_LABELS[filters.season as keyof typeof SEASON_LABELS] });
+  if (filters.min_price) pills.push({ key: "min_price", label: `Min ${filters.min_price} DZD` });
+  if (filters.max_price) pills.push({ key: "max_price", label: `Max ${filters.max_price} DZD` });
+  if (filters.in_stock) pills.push({ key: "in_stock", label: "In Stock" });
   if (filters.min_rating) pills.push({ key: "min_rating", label: `★ ${filters.min_rating}+` });
 
   if (pills.length === 0) return null;
@@ -57,17 +49,9 @@ function ActivePills({
   return (
     <div className="flex flex-wrap gap-2 mt-2">
       {pills.map(({ key, label }) => (
-        <span
-          key={key}
-          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary-dark"
-        >
+        <span key={key} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary-dark">
           {label}
-          <button
-            type="button"
-            onClick={() => onClearFilter(key)}
-            aria-label={`Remove ${label} filter`}
-            className="hover:text-primary transition-colors"
-          >
+          <button type="button" onClick={() => onClearFilter(key)} aria-label={`Remove ${label} filter`} className="hover:text-primary transition-colors">
             <span className="material-symbols-outlined text-xs">close</span>
           </button>
         </span>
@@ -76,13 +60,25 @@ function ActivePills({
   );
 }
 
+/**
+ * Generates an array of page numbers to display, with ellipsis for large ranges.
+ */
+function getPageNumbers(current: number, total: number): (number | "ellipsis")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  if (current <= 4) return [1, 2, 3, 4, 5, "ellipsis", total];
+  if (current >= total - 3) return [1, "ellipsis", total - 4, total - 3, total - 2, total - 1, total];
+  return [1, "ellipsis", current - 1, current, current + 1, "ellipsis", total];
+}
+
 export default function ProductGrid({
   products, totalCount, page, totalPages, isLoading,
   filters, onPage, onClearFilter,
 }: Props) {
+  const startItem = (page - 1) * 12 + 1;
+  const endItem = Math.min(page * 12, totalCount);
+
   return (
     <div className="flex-1 min-w-0">
-
       {/* Results bar */}
       <div className="mb-4">
         <p className="text-sm text-neutral-500">
@@ -90,11 +86,8 @@ export default function ProductGrid({
             "Loading products…"
           ) : (
             <>
-              Showing{" "}
-              <span className="font-bold text-neutral-900">{products.length}</span>{" "}
-              of{" "}
-              <span className="font-bold text-neutral-900">{totalCount}</span>{" "}
-              products
+              Showing <span className="font-bold text-neutral-900">{startItem}–{endItem}</span> of{" "}
+              <span className="font-bold text-neutral-900">{totalCount}</span> products
             </>
           )}
         </p>
@@ -112,12 +105,7 @@ export default function ProductGrid({
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-24 text-neutral-400">
-          <span
-            className="material-symbols-outlined text-5xl mb-4"
-            style={{ fontVariationSettings: "'FILL' 0" }}
-          >
-            search_off
-          </span>
+          <span className="material-symbols-outlined text-5xl mb-4">search_off</span>
           <p className="text-lg font-medium text-neutral-600">No products found.</p>
           <p className="text-sm mt-1">Try adjusting your filters or search term.</p>
         </div>
@@ -125,39 +113,50 @@ export default function ProductGrid({
 
       {/* Pagination */}
       {!isLoading && totalPages > 1 && (
-        <div className="mt-10 flex items-center justify-center gap-1">
-          <button
-            onClick={() => onPage(Math.max(1, page - 1))}
-            disabled={page === 1}
-            className="inline-flex items-center px-2 py-2 rounded-lg border border-neutral-200 bg-white text-neutral-500 hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            aria-label="Previous page"
-          >
-            <span className="material-symbols-outlined text-lg">chevron_left</span>
-          </button>
-
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+        <div className="mt-10 flex flex-col items-center gap-4">
+          <div className="flex items-center justify-center gap-1">
             <button
-              key={n}
-              onClick={() => onPage(n)}
-              aria-current={n === page ? "page" : undefined}
-              className={`inline-flex items-center justify-center w-9 h-9 rounded-lg border text-sm font-bold transition-colors ${
-                n === page
-                  ? "border-primary bg-primary/10 text-primary-dark"
-                  : "border-neutral-200 bg-white text-neutral-500 hover:bg-neutral-50"
-              }`}
+              onClick={() => onPage(Math.max(1, page - 1))}
+              disabled={page === 1}
+              className="inline-flex items-center px-2 py-2 rounded-lg border border-neutral-200 bg-white text-neutral-500 hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              aria-label="Previous page"
             >
-              {n}
+              <span className="material-symbols-outlined text-lg">chevron_left</span>
             </button>
-          ))}
 
-          <button
-            onClick={() => onPage(Math.min(totalPages, page + 1))}
-            disabled={page === totalPages}
-            className="inline-flex items-center px-2 py-2 rounded-lg border border-neutral-200 bg-white text-neutral-500 hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            aria-label="Next page"
-          >
-            <span className="material-symbols-outlined text-lg">chevron_right</span>
-          </button>
+            {getPageNumbers(page, totalPages).map((item, idx) =>
+              item === "ellipsis" ? (
+                <span key={`ellipsis-${idx}`} className="px-2 text-neutral-400">…</span>
+              ) : (
+                <button
+                  key={item}
+                  onClick={() => onPage(item)}
+                  aria-current={item === page ? "page" : undefined}
+                  className={`inline-flex items-center justify-center w-9 h-9 rounded-lg border text-sm font-bold transition-colors ${
+                    item === page
+                      ? "border-primary bg-primary/10 text-primary-dark"
+                      : "border-neutral-200 bg-white text-neutral-500 hover:bg-neutral-50"
+                  }`}
+                >
+                  {item}
+                </button>
+              )
+            )}
+
+            <button
+              onClick={() => onPage(Math.min(totalPages, page + 1))}
+              disabled={page === totalPages}
+              className="inline-flex items-center px-2 py-2 rounded-lg border border-neutral-200 bg-white text-neutral-500 hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              aria-label="Next page"
+            >
+              <span className="material-symbols-outlined text-lg">chevron_right</span>
+            </button>
+          </div>
+
+          {/* Optional: page size selector (if you ever want to change it) */}
+          <div className="text-xs text-neutral-400">
+            Page {page} of {totalPages}
+          </div>
         </div>
       )}
     </div>

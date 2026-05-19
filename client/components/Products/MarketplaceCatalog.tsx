@@ -10,7 +10,7 @@ import { EMPTY_FILTERS, SORT_LABELS, SORT_TO_ORDERING } from "@/types/Product";
 import { categoryApi } from "@/lib/api";
 import type { ApiCategory } from "@/types/CategoryManagement";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
 
 export default function MarketplaceCatalog() {
   const [search, setSearch] = useState("");
