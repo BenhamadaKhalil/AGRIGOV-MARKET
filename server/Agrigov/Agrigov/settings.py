@@ -92,9 +92,8 @@ ROOT_URLCONF = 'Agrigov.urls'
 AUTH_USER_MODEL = "users.User"
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "hhttps://agrigov-market-git-master-djawads-projects-01b046d5.vercel.app"
+    "https://agrigov-market-git-master-djawads-projects-01b046d5.vercel.app",
 ]
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
